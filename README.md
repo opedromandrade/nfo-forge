@@ -14,7 +14,7 @@ Same input, same output format — pick your poison. ⚖️
 
 ## ✨ What it does
 
-Point it at an album folder, get a structured `.nfo` back:
+Put the script in an album folder, get a structured `.nfo` back:
 
 - 📀 Album, artist, year, genre (from ID3 tags)
 - 🎚️ Per-track bitrate, sample rate, channel mode
@@ -55,10 +55,10 @@ Open **Command Prompt** or **PowerShell**, then:
 
 ```bat
 :: ffprobe variant
-ffprobe\make_nfo.bat C:\Music\SomeArtist\SomeAlbum
+.\ffprobe2nfo
 
 :: mp3guessenc variant
-mp3guessenc\make_nfo.bat C:\Music\SomeArtist\SomeAlbum
+.\guessenc2nfo
 ```
 
 The `.nfo` lands in the album folder. Rinse, repeat, enjoy the metadata
