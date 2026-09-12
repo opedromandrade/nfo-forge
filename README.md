@@ -66,7 +66,7 @@ glow. 💫
 
 > 💡 **Tip:** if you have the tools in your`PATH`, you just need to put /
 > the scripts in the folder you wish to analize. other than that, the scripts look
-> there first.
+> in rhe current there first.
 
 ## ⚖️ Which one should I use?
 
