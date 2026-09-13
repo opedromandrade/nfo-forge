@@ -55,7 +55,7 @@ Open **Command Prompt** or **PowerShell**, then:
 
 ```bat
 :: ffprobe variant
-.\ffprobe2nfo
+.\ffprobe2nfo.bat
 
 :: mp3guessenc variant
 .\guessenc2nfo
