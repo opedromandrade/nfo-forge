@@ -58,7 +58,7 @@ Open **Command Prompt** or **PowerShell**, then:
 .\ffprobe2nfo.bat
 
 :: mp3guessenc variant
-.\guessenc2nfo
+.\guessenc2nfo.bat
 ```
 
 The `.nfo` lands in the album folder. Rinse, repeat, enjoy the metadata
