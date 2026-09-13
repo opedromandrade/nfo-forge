@@ -1,0 +1,12 @@
+Title=Blade Runner Original Soundtrack
+Artist=Vangelis
+Year=1982
+Genre=Soundtrack
+
+[Track 01]
+Title=Main Title
+Bitrate=192kbps
+SampleRate=44100
+Channels=Stereo
+Duration=04:23
+Encoder=LAME 3.98
