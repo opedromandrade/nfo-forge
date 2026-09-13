@@ -86,6 +86,23 @@ More detail in [`examples/`](./examples) and the comparison doc.
 See [`examples/`](./examples) for a full sample. TL;DR — tidy, greppable,
 reproducible.
 
+## 📂 Repo structure
+
+```text
+nfo-forge/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── ffprobe/
+│   └── make_nfo.bat
+├── mp3guessenc/
+│   └── make_nfo.bat
+├── examples/
+│   └── sample_album.nfo
+└── docs/
+    └── COMPARISON.md
+```
+
 ## 🤝 Contributing
 
 PRs welcome. Keep it POSIX-ish— er, Windows-friendly, keep it tested, keep
