@@ -41,7 +41,6 @@ startup and point you here if it's missing — no silent failures. 🔔
   also work), extract it, and add its `bin` folder to your `PATH`.
   
 ```
-
 # UPDATE THIS LINE to match your actual folder path
 $ffmpegRoot = "C:\ffmpeg" 
 
@@ -54,7 +53,6 @@ if ($currentPath -notlike "*$ffmpegRoot*") {
 } else {
     Write-Host "ℹ️ $ffmpegRoot is already in your PATH."
 }
-
 ```  
   
 - ✅ Verify: open a new Command Prompt and run `ffprobe -version`
