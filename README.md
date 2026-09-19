@@ -39,6 +39,24 @@ startup and point you here if it's missing — no silent failures. 🔔
   [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/)
   ([BtbN's builds on GitHub](https://github.com/btbn/ffmpeg-builds/releases)
   also work), extract it, and add its `bin` folder to your `PATH`.
+  
+```
+
+# UPDATE THIS LINE to match your actual folder path
+$ffmpegRoot = "C:\ffmpeg" 
+
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+
+if ($currentPath -notlike "*$ffmpegRoot*") {
+    $newPath = if ($currentPath) { "$currentPath;$ffmpegRoot" } else { $ffmpegRoot }
+    [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+    Write-Host "✅ Added $ffmpegRoot to your user PATH."
+} else {
+    Write-Host "ℹ️ $ffmpegRoot is already in your PATH."
+}
+
+```  
+  
 - ✅ Verify: open a new Command Prompt and run `ffprobe -version`
 
 **For the mp3guessenc variant — download mp3guessenc:**
