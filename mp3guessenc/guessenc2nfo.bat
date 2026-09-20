@@ -81,6 +81,13 @@ exit /b 0
 #PS#                            elseif ($encoding -eq 3) { $strVal = [System.Text.Encoding]::UTF8.GetString($rawData) }
 #PS#                            $strVal = $strVal -replace "`0", ""
 #PS#
+#PS#                            if ($frameId -eq "TPE1" -and [string]::IsNullOrWhiteSpace($props.Artist)) { $props.Artist =$strVal }
+#PS#                            if ($frameId -eq "TALB" -and [string]::IsNullOrWhiteSpace($props.Album)) { $props.Album =$strVal }
+#PS#                            if ($frameId -eq "TIT2" -and [string]::IsNullOrWhiteSpace($props.Title)) { $props.Title =$strVal }
+#PS#                            if ($frameId -eq "TCON" -and [string]::IsNullOrWhiteSpace($props.Genre)) { $props.Genre =$strVal -replace '^\(\d+\)', '' }
+#PS#                            if (($frameId -eq "TYER" -or $frameId -eq "TDRC") -and [string]::IsNullOrWhiteSpace($props.Year)) { 
+#PS#                                $props.Year = $strVal.Substring(0, [math]::Min(4,$strVal.Length)) 
+#PS#                            }
 #PS#                            if ($frameId -eq "TPUB" -and [string]::IsNullOrWhiteSpace($props.Label)) { $props.Label =$strVal }
 #PS#                            if ($frameId -eq "TPOS" -and [string]::IsNullOrWhiteSpace($props.Disc)) { 
 #PS#                                $props.Disc =$strVal.Trim()
@@ -96,13 +103,18 @@ exit /b 0
 #PS#    $lines =$Output -split "`n"
 #PS#    foreach ($line in $lines) {
 #PS#        $line = $line.Trim()
-#PS#        if ($line -match "^Title\s*:\s*(.*)") { $props.Title = $matches[1].Trim() }
-#PS#        if ($line -match "^Artist\s*:\s*(.*)") { $props.Artist = $matches[1].Trim() }
-#PS#        if ($line -match "^Album\s*:\s*(.*)") { $props.Album = $matches[1].Trim() }
-#PS#        if ($line -match "^Year\s*:\s*(.*)") { $props.Year = $matches[1].Trim() }
-#PS#        if ($line -match "^Genre\s*:\s*(.*)") { $props.Genre = $matches[1].Trim() }
+#PS#        if ($line -match "^Title\s*:\s*(.*)" -and [string]::IsNullOrWhiteSpace($props.Title)) { $props.Title = $matches[1].Trim() }
+#PS#        if ($line -match "^Artist\s*:\s*(.*)" -and [string]::IsNullOrWhiteSpace($props.Artist)) { $props.Artist = $matches[1].Trim() }
+#PS#        if ($line -match "^Album\s*:\s*(.*)" -and [string]::IsNullOrWhiteSpace($props.Album)) { $props.Album = $matches[1].Trim() }
+#PS#        if ($line -match "^Year\s*:\s*(.*)" -and [string]::IsNullOrWhiteSpace($props.Year)) { $props.Year = $matches[1].Trim() }
+#PS#        if ($line -match "^Genre\s*:\s*(.*)" -and [string]::IsNullOrWhiteSpace($props.Genre)) { $props.Genre = $matches[1].Trim() }
 #PS#        if ($line -match "^Audio frequency\s*:\s*(\d+)\s*Hz") { $props.SampleRate = $matches[1] }
-#PS#        if ($line -match "^Encoding mode\s*:\s*(.*)") { $props.Channels = $matches[1].Trim() }
+#PS#        if ($line -match "^Encoding mode\s*:\s*(.*)") { 
+#PS#            $mode = $matches[1].Trim().ToLower()
+#PS#            if ($mode -match "stereo") { $props.Channels = "2 channels (stereo)" }
+#PS#            elseif ($mode -match "mono") { $props.Channels = "1 channel (mono)" }
+#PS#            else { $props.Channels = $matches[1].Trim() }
+#PS#        }
 #PS#        if ($line -match "Length\s*:\s*(\d):(\d{2}):(\d{2})") {
 #PS#            $h = [int]$matches[1]
 #PS#            $m = [int]$matches[2]
