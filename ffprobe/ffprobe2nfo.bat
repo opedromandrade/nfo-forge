@@ -198,17 +198,17 @@ exit /b 0
 #PS#$(Format-Field "Album" $album)
 #PS#$(Format-Field "Genre" $genre)
 #PS#$(Format-Field "Year" $year)
-#PS#$(Format-Field "Publisher" $label)
+#PS#$(Format-Field "Label" $label)
 #PS#$(Format-Field "Disc" $disc)
 #PS#
 #PS#$(Format-Field "Encoder" $encoder)
-#PS#$(Format-Field "Bitrate (Avg)" "$avgBr kbps")
+#PS#$(Format-Field "Bitrate (AVG)" "$avgBr kbps")
 #PS#$(Format-Field "Format" $codecStr)
 #PS#$(Format-Field "Channels" $channelStr)
 #PS#$(Format-Field "Sample rate" "$rate Hz")
 #PS#
-#PS#$(Format-Field "TOTAL SIZE" "$totalSize MB")
-#PS#$(Format-Field "PLAYTIME" $playtime)
+#PS#$(Format-Field "Total size" "$totalSize MB")
+#PS#$(Format-Field "Playtime" $playtime)
 #PS#
 #PS#$tracklistHeader
 #PS#$trackListing
