@@ -310,8 +310,8 @@ exit /b 0
 #PS#$(Format-Field "Channels" $chan)
 #PS#$(Format-Field "Sample rate" "$rate Hz")
 #PS#
-#PS#$(Format-Field "TOTAL SIZE" "$totalSize MB")
-#PS#$(Format-Field "PLAYTIME" $playtime)
+#PS#$(Format-Field "Total size" "$totalSize MB")
+#PS#$(Format-Field "Playtime" $playtime)
 #PS#
 #PS#$tracklistHeader
 #PS#$trackListing
