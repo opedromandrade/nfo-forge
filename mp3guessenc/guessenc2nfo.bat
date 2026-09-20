@@ -55,12 +55,55 @@ exit /b 0
 #PS#    return ($Label.PadRight(25, ".") + ": " + $Value)
 #PS#}
 #PS#
-#PS#function Parse-Mp3GuessEncOutput([string]$Output) {
+#PS#function Parse-Mp3GuessEncOutput([string]$Output, [string]$FilePath) {
 #PS#    $props = @{ 
 #PS#        Artist = ""; Album = ""; Title = ""; Year = ""; Genre = ""; 
 #PS#        DurationSec = 0; Bitrate = 0; SampleRate = 0; Channels = ""; Encoder = ""; RawOutput = ""
 #PS#    }
 #PS#    $props.RawOutput = $Output
+#PS#
+#PS#    # --- BINARY READER FOR PUBLISHER & DISC (Since mp3guessenc skips ID3v2) ---
+#PS#    if (-not [string]::IsNullOrWhiteSpace($FilePath)) {
+#PS#        try {
+#PS#            $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+#PS#            # Check for ID3v2 header "ID3"
+#PS#            if ($bytes[0] -eq 0x49 -and $bytes[1] -eq 0x44 -and $bytes[2] -eq 0x33) {
+#PS#                # Calculate tag size (4 bytes, big-endian, unsynchronized)
+#PS#                $sizeBytes = $bytes[6..9]
+#PS#                $headerSize = ($sizeBytes[0] * 2097152) + ($sizeBytes[1] * 16384) + ($sizeBytes[2] * 128) + $bytes[3]
+#PS#                $tagEnd = 10 + $headerSize
+#PS#                $offset = 10
+#PS#
+#PS#                while ($offset -lt $tagEnd -and $offset -lt $bytes.Length - 10) {
+#PS#                    $frameId = [System.Text.Encoding]::ASCII.GetString($bytes[$offset..($offset+3)])
+#PS#                    # Frame size is 4 bytes big-endian
+#PS#                    $frameSize = ($bytes[$offset+4] * 16777216) + ($bytes[$offset+5] * 65536) + ($bytes[$offset+6] * 256) + $bytes[$offset+7]
+#PS#
+#PS#                    if ($frameSize -gt 0 -and ($offset + 10 + $frameSize) -le $bytes.Length) {
+#PS#                        $dataStart = $offset + 10
+#PS#                        $encoding = $bytes[$dataStart]
+#PS#                        $dataLen = $frameSize - 1
+#PS#                        if ($dataLen -gt 0) {
+#PS#                            $rawData = $bytes[($dataStart+1)..($dataStart+$dataLen)]
+#PS#                            $strVal = ""
+#PS#                            if ($encoding -eq 0) { $strVal = [System.Text.Encoding]::GetEncoding('iso-8859-1').GetString($rawData) }
+#PS#                            elseif ($encoding -eq 1) { $strVal = [System.Text.Encoding]::GetEncoding('utf-16').GetString($rawData) }
+#PS#                            elseif ($encoding -eq 3) { $strVal = [System.Text.Encoding]::UTF8.GetString($rawData) }
+#PS#                            $strVal = $strVal -replace "`0", ""
+#PS#
+#PS#                            # Check for TPUB (Publisher) and TPOS (Disc)
+#PS#                            if ($frameId -eq "TPUB" -and [string]::IsNullOrWhiteSpace($props.Label)) { $props.Label = $strVal }
+#PS#                            if ($frameId -eq "TPOS" -and [string]::IsNullOrWhiteSpace($props.Disc)) { 
+#PS#                                $props.Disc = $strVal.Trim()
+#PS#                            }
+#PS#                        }
+#PS#                    }
+#PS#                    $offset += (4 + 4 + $frameSize)
+#PS#                }
+#PS#            }
+#PS#        } catch {}
+#PS#    }
+#PS#    # --- END BINARY READER ---
 #PS#
 #PS#    $lines = $Output -split "`n"
 #PS#    foreach ($line in $lines) {
@@ -125,7 +168,7 @@ exit /b 0
 #PS#if ($files.Count -eq 0) {
 #PS#    Write-Host "$(Get-Emoji 0x26A0) No MP3 files found."
 #PS#    pause
-#PS#    exit 1
+#PS#    exit /b 1
 #PS#}
 #PS#
 #PS#Write-Host "$(Get-Emoji 0x1F44C) Found $($files.Count) MP3 file(s)!"
@@ -142,8 +185,7 @@ exit /b 0
 #PS#$refTrackProps = $null
 #PS#
 #PS#foreach ($file in $files) {
-#PS#    # Run mp3guessenc and capture output
-#PS#    # Force ISO-8859-1 for mp3guessenc output (common for ID3v1), then convert to UTF-8
+#PS#    # Run mp3guessenc with ISO-8859-1 encoding to fix special chars like é
 #PS#    $psi = New-Object System.Diagnostics.ProcessStartInfo
 #PS#    $psi.FileName = $mgenc
 #PS#    $psi.Arguments = "-- `"$($file.FullName)`""
@@ -164,7 +206,7 @@ exit /b 0
 #PS#        continue
 #PS#    }
 #PS#
-#PS#    $props = Parse-Mp3GuessEncOutput ($output -join "`n")
+#PS#    $props = Parse-Mp3GuessEncOutput ($output -join "`n") $file.FullName
 #PS#    
 #PS#    if ($null -eq $props) {
 #PS#        Write-Warning "$(Get-Emoji 0x26A0) Could not parse $($file.Name)"
@@ -197,7 +239,7 @@ exit /b 0
 #PS#
 #PS#if ($trackNumber -eq 0) {
 #PS#    Write-Host "$(Get-Emoji 0x274C) No readable MP3 files found."
-#PS#    exit 1
+#PS#    exit /b 1
 #PS#}
 #PS#
 #PS#if ($null -eq $refTrackProps) { $refTrackProps = $jsonList[0] }
@@ -208,8 +250,8 @@ exit /b 0
 #PS#$album    = Value-Or-Unknown $refTrackProps.Album
 #PS#$year     = Value-Or-Unknown $refTrackProps.Year
 #PS#$genre    = Value-Or-Unknown $refTrackProps.Genre
-#PS#$label    = "Unknown"
-#PS#$disc     = "Unknown"
+#PS#$label    = $refTrackProps.Label
+#PS#$disc     = $refTrackProps.Disc
 #PS#
 #PS#$rate     = $refTrackProps.SampleRate
 #PS#$chan     = $refTrackProps.Channels
@@ -226,7 +268,8 @@ Determine encoding mode from raw output
 #PS#    if ($refTrackProps.RawOutput -match "-V\s?(\d)") {
 #PS#        $codecShort = "$codecShort V$($matches[1])"
 #PS#    }
-#PS#} elseif ($refTrackProps.RawOutput -match "CBR") { 
+#PS#}
+#PS#if ($refTrackProps.RawOutput -match "CBR") { 
 #PS#    $codecShort = "MP3 CBR" 
 #PS#}
 #PS#
