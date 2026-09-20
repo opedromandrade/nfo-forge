@@ -111,7 +111,7 @@ exit /b 0
 #PS#        if ($line -match "^Audio frequency\s*:\s*(\d+)\s*Hz") { $props.SampleRate = $matches[1] }
 #PS#        if ($line -match "^Encoding mode\s*:\s*(.*)") { 
 #PS#            $mode = $matches[1].Trim().ToLower()
-#PS#            if ($mode -match "stereo") { $props.Channels = "2 channels (stereo)" }
+#PS#            if ($mode -match "stereo") { $props.Channels = "2 Channels (Stereo)" }
 #PS#            elseif ($mode -match "mono") { $props.Channels = "1 channel (mono)" }
 #PS#            else { $props.Channels = $matches[1].Trim() }
 #PS#        }
