@@ -276,7 +276,7 @@ exit /b 0
 #PS#
 #PS#$header = @"
 #PS#$divider
-#PS#$(Center-Line "$artist -$album")
+#PS#$(Center-Line "$artist - $album")
 #PS#$divider
 #PS#"@
 #PS#
