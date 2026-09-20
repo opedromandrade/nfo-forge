@@ -300,12 +300,12 @@ exit /b 0
 #PS#$(Format-Field "Album" $album)
 #PS#$(Format-Field "Genre" $genre)
 #PS#$(Format-Field "Year" $year)
-#PS#$(Format-Field "Publisher" $label)
+#PS#$(Format-Field "Label" $label)
 #PS#$(Format-Field "Disc" $disc)
 #PS#
 #PS#$(Format-Field "Encoder" $encoderStr)
 #PS#$(Format-Field "Encoding settings" $codecShort)
-#PS#$(Format-Field "Bitrate (Avg)" "$avgBr kbps")
+#PS#$(Format-Field "Bitrate (AVG)" "$avgBr kbps")
 #PS#$(Format-Field "Format" $codecStr)
 #PS#$(Format-Field "Channels" $chan)
 #PS#$(Format-Field "Sample rate" "$rate Hz")
@@ -329,4 +329,5 @@ exit /b 0
 #PS#
 #PS#Write-Host ""
 #PS#Write-Host "$(Get-Emoji 0x2705)$folderName.nfo created successfully!" -ForegroundColor Green
+#PS#Write-Host "$(Get-Emoji 0x1F3B6) Enjoy the music!"
 #PS#Write-Host "$(Get-Emoji 0x1F3B6) Enjoy the music!"
