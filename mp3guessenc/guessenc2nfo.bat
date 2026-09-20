@@ -112,7 +112,7 @@ exit /b 0
 #PS#        if ($line -match "^Encoding mode\s*:\s*(.*)") { 
 #PS#            $mode = $matches[1].Trim().ToLower()
 #PS#            if ($mode -match "stereo") { $props.Channels = "2 Channels (Stereo)" }
-#PS#            elseif ($mode -match "mono") { $props.Channels = "1 channel (mono)" }
+#PS#            elseif ($mode -match "mono") { $props.Channels = "1 Channel (Mono)" }
 #PS#            else { $props.Channels = $matches[1].Trim() }
 #PS#        }
 #PS#        if ($line -match "Length\s*:\s*(\d):(\d{2}):(\d{2})") {
