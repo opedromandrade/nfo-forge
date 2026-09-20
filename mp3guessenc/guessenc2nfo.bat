@@ -303,12 +303,12 @@ exit /b 0
 #PS#$(Format-Field "Publisher" $label)
 #PS#$(Format-Field "Disc" $disc)
 #PS#
+#PS#$(Format-Field "Encoder" $encoderStr)
+#PS#$(Format-Field "Encoding settings" $codecShort)
+#PS#$(Format-Field "Bitrate (Avg)" "$avgBr kbps")
 #PS#$(Format-Field "Format" $codecStr)
 #PS#$(Format-Field "Channels" $chan)
 #PS#$(Format-Field "Sample rate" "$rate Hz")
-#PS#$(Format-Field "Bitrate (Avg)" "$avgBr kbps")
-#PS#$(Format-Field "Encoder" $encoderStr)
-#PS#$(Format-Field "Encoding settings" $codecShort)
 #PS#
 #PS#$(Format-Field "Total size" "$totalSize MB")
 #PS#$(Format-Field "Playtime" $playtime)
