@@ -43,12 +43,6 @@ exit /b 0
 #PS#    return (" " * $pad) + $Text
 #PS#}
 #PS#
-#PS#function Value-Or-Unknown {
-#PS#    param($Value)
-#PS#    if ([string]::IsNullOrWhiteSpace([string]$Value)) { return "Unknown" }
-#PS#    return [string]$Value
-#PS#}
-#PS#
 #PS#function Format-Field {
 #PS#    param([string]$Label, [string]$Value)
 #PS#    if ([string]::IsNullOrWhiteSpace($Value)) { $Value = "Unknown" }
@@ -58,17 +52,14 @@ exit /b 0
 #PS#function Parse-Mp3GuessEncOutput([string]$Output, [string]$FilePath) {
 #PS#    $props = @{ 
 #PS#        Artist = ""; Album = ""; Title = ""; Year = ""; Genre = ""; 
-#PS#        DurationSec = 0; Bitrate = 0; SampleRate = 0; Channels = ""; Encoder = ""; RawOutput = ""
+#PS#        DurationSec = 0; Bitrate = 0; SampleRate = 0; Channels = ""; Encoder = ""; RawOutput = ""; Label = ""; Disc = ""
 #PS#    }
 #PS#    $props.RawOutput = $Output
 #PS#
-#PS#    # --- BINARY READER FOR PUBLISHER & DISC (Since mp3guessenc skips ID3v2) ---
 #PS#    if (-not [string]::IsNullOrWhiteSpace($FilePath)) {
 #PS#        try {
 #PS#            $bytes = [System.IO.File]::ReadAllBytes($FilePath)
-#PS#            # Check for ID3v2 header "ID3"
 #PS#            if ($bytes[0] -eq 0x49 -and $bytes[1] -eq 0x44 -and $bytes[2] -eq 0x33) {
-#PS#                # Calculate tag size (4 bytes, big-endian, unsynchronized)
 #PS#                $sizeBytes = $bytes[6..9]
 #PS#                $headerSize = ($sizeBytes[0] * 2097152) + ($sizeBytes[1] * 16384) + ($sizeBytes[2] * 128) + $bytes[3]
 #PS#                $tagEnd = 10 + $headerSize
@@ -76,7 +67,6 @@ exit /b 0
 #PS#
 #PS#                while ($offset -lt $tagEnd -and $offset -lt $bytes.Length - 10) {
 #PS#                    $frameId = [System.Text.Encoding]::ASCII.GetString($bytes[$offset..($offset+3)])
-#PS#                    # Frame size is 4 bytes big-endian
 #PS#                    $frameSize = ($bytes[$offset+4] * 16777216) + ($bytes[$offset+5] * 65536) + ($bytes[$offset+6] * 256) + $bytes[$offset+7]
 #PS#
 #PS#                    if ($frameSize -gt 0 -and ($offset + 10 + $frameSize) -le $bytes.Length) {
@@ -91,32 +81,26 @@ exit /b 0
 #PS#                            elseif ($encoding -eq 3) { $strVal = [System.Text.Encoding]::UTF8.GetString($rawData) }
 #PS#                            $strVal = $strVal -replace "`0", ""
 #PS#
-#PS#                            # Check for TPUB (Publisher) and TPOS (Disc)
-#PS#                            if ($frameId -eq "TPUB" -and [string]::IsNullOrWhiteSpace($props.Label)) { $props.Label = $strVal }
+#PS#                            if ($frameId -eq "TPUB" -and [string]::IsNullOrWhiteSpace($props.Label)) { $props.Label =$strVal }
 #PS#                            if ($frameId -eq "TPOS" -and [string]::IsNullOrWhiteSpace($props.Disc)) { 
-#PS#                                $props.Disc = $strVal.Trim()
+#PS#                                $props.Disc =$strVal.Trim()
 #PS#                            }
 #PS#                        }
 #PS#                    }
-#PS#                    $offset += (4 + 4 + $frameSize)
+#PS#                    $offset += (10 +$frameSize)
 #PS#                }
 #PS#            }
 #PS#        } catch {}
 #PS#    }
-#PS#    # --- END BINARY READER ---
 #PS#
-#PS#    $lines = $Output -split "`n"
+#PS#    $lines =$Output -split "`n"
 #PS#    foreach ($line in $lines) {
 #PS#        $line = $line.Trim()
-#PS#        
-#PS#        # ID3v1 Tags
 #PS#        if ($line -match "^Title\s*:\s*(.*)") { $props.Title = $matches[1].Trim() }
 #PS#        if ($line -match "^Artist\s*:\s*(.*)") { $props.Artist = $matches[1].Trim() }
 #PS#        if ($line -match "^Album\s*:\s*(.*)") { $props.Album = $matches[1].Trim() }
 #PS#        if ($line -match "^Year\s*:\s*(.*)") { $props.Year = $matches[1].Trim() }
 #PS#        if ($line -match "^Genre\s*:\s*(.*)") { $props.Genre = $matches[1].Trim() }
-#PS#        
-#PS#        # Technical Data
 #PS#        if ($line -match "^Audio frequency\s*:\s*(\d+)\s*Hz") { $props.SampleRate = $matches[1] }
 #PS#        if ($line -match "^Encoding mode\s*:\s*(.*)") { $props.Channels = $matches[1].Trim() }
 #PS#        if ($line -match "Length\s*:\s*(\d):(\d{2}):(\d{2})") {
@@ -130,7 +114,6 @@ exit /b 0
 #PS#        }
 #PS#        if ($line -match "^Lame short string\s*:\s*(.*)") { $props.Encoder = $matches[1].Trim() }
 #PS#    }
-#PS#
 #PS#    return $props
 #PS#}
 #PS#
@@ -185,7 +168,6 @@ exit /b 0
 #PS#$refTrackProps = $null
 #PS#
 #PS#foreach ($file in $files) {
-#PS#    # Run mp3guessenc with ISO-8859-1 encoding to fix special chars like é
 #PS#    $psi = New-Object System.Diagnostics.ProcessStartInfo
 #PS#    $psi.FileName = $mgenc
 #PS#    $psi.Arguments = "-- `"$($file.FullName)`""
@@ -208,32 +190,30 @@ exit /b 0
 #PS#
 #PS#    $props = Parse-Mp3GuessEncOutput ($output -join "`n") $file.FullName
 #PS#    
-#PS#    if ($null -eq $props) {
+#PS#    if ($null -eq$props) {
 #PS#        Write-Warning "$(Get-Emoji 0x26A0) Could not parse $($file.Name)"
 #PS#        continue
 #PS#    }
 #PS#
 #PS#    $trackNumber++
-#PS#    $jsonList += $props
+#PS#    $jsonList +=$props
 #PS#
-#PS#    $sumBr += $props.Bitrate
-#PS#    $sumDur += $props.DurationSec
-#PS#    $sumSize += $file.Length
+#PS#    $sumBr +=$props.Bitrate
+#PS#    $sumDur +=$props.DurationSec
+#PS#    $sumSize +=$file.Length
 #PS#
-#PS#    $title = Value-Or-Unknown $props.Title
-#PS#    if ($title -eq "Unknown") { $title = $file.BaseName }
+#PS#    $title = if ([string]::IsNullOrWhiteSpace($props.Title)) { "Unknown" } else { $props.Title }
+#PS#    if ($title -eq "Unknown") { $title =$file.BaseName }
 #PS#
-#PS#    $trackArtist = Value-Or-Unknown $props.Artist
+#PS#    $trackArtist = if ([string]::IsNullOrWhiteSpace($props.Artist)) { "Unknown" } else { $props.Artist }
 #PS#
-#PS#    # Format Track Time
 #PS#    $ts = [TimeSpan]::FromSeconds($props.DurationSec)
 #PS#    $trackTime = "{0:00}:{1:00}:{2:00}" -f [math]::Floor($ts.TotalHours), $ts.Minutes, $ts.Seconds
 #PS#
-#PS#    [void]$trackList.Add(("{0:00}.{1} - {2} [{3}]" -f $trackNumber, $trackArtist, $title, $trackTime))
+#PS#    [void]$trackList.Add(("{0:00}.{1} - {2} [{3}]" -f $trackNumber,$trackArtist, $title,$trackTime))
 #PS#
-#PS#    # Reference track
-#PS#    if ($null -eq $refTrackProps -and $props.Album -ne "Unknown") {
-#PS#        $refTrackProps = $props
+#PS#    if ($null -eq $refTrackProps -and$props.Album -ne "Unknown") {
+#PS#        $refTrackProps =$props
 #PS#    }
 #PS#}
 #PS#
@@ -242,26 +222,23 @@ exit /b 0
 #PS#    exit /b 1
 #PS#}
 #PS#
-#PS#if ($null -eq $refTrackProps) { $refTrackProps = $jsonList[0] }
+#PS#if ($null -eq$refTrackProps) { $refTrackProps =$jsonList[0] }
 #PS#
 #PS#Write-Host "$(Get-Emoji 0x1F50E) Picking album reference..."
 #PS#
-#PS#$artist   = Value-Or-Unknown $refTrackProps.Artist
-#PS#$album    = Value-Or-Unknown $refTrackProps.Album
-#PS#$year     = Value-Or-Unknown $refTrackProps.Year
-#PS#$genre    = Value-Or-Unknown $refTrackProps.Genre
-#PS#$label    = $refTrackProps.Label
-#PS#$disc     = $refTrackProps.Disc
+#PS#$artist   = if ([string]::IsNullOrWhiteSpace($refTrackProps.Artist)) { "Unknown" } else { $refTrackProps.Artist }
+#PS#$album    = if ([string]::IsNullOrWhiteSpace($refTrackProps.Album)) { "Unknown" } else { $refTrackProps.Album }
+#PS#$year     = if ([string]::IsNullOrWhiteSpace($refTrackProps.Year)) { "Unknown" } else { $refTrackProps.Year }
+#PS#$genre    = if ([string]::IsNullOrWhiteSpace($refTrackProps.Genre)) { "Unknown" } else { $refTrackProps.Genre }
+#PS#$label    = if ([string]::IsNullOrWhiteSpace($refTrackProps.Label)) { "Unknown" } else { $refTrackProps.Label }
+#PS#$disc     = if ([string]::IsNullOrWhiteSpace($refTrackProps.Disc)) { "Unknown" } else { $refTrackProps.Disc }
 #PS#
-#PS#$rate     = $refTrackProps.SampleRate
-#PS#$chan     = $refTrackProps.Channels
+#PS#$rate     =$refTrackProps.SampleRate
+#PS#$chan     =$refTrackProps.Channels
 #PS#$codecStr = "MPEG Audio Layer 3"
 #PS#
 #PS#Write-Host "$(Get-Emoji 0x1F52C) Analyzing encoder info..."
 #PS#
-#PS#$encInfo = @{ lame = $refTrackProps.Encoder; brmode = ""; quality = "" }
-#PS#
-Determine encoding mode from raw output
 #PS#$codecShort = "MP3"
 #PS#if ($refTrackProps.RawOutput -match "VBR") { 
 #PS#    $codecShort = "MP3 VBR" 
@@ -273,8 +250,7 @@ Determine encoding mode from raw output
 #PS#    $codecShort = "MP3 CBR" 
 #PS#}
 #PS#
-#PS#$encoderStr = $encInfo.lame
-#PS#if (-not $encoderStr) { $encoderStr = "Unknown" }
+#PS#$encoderStr = if ([string]::IsNullOrWhiteSpace($refTrackProps.Encoder)) { "Unknown" } else { $refTrackProps.Encoder }
 #PS#
 #PS#Write-Host "$(Get-Emoji 0x1F4DD) Composing the NFO..."
 #PS#
@@ -288,7 +264,7 @@ Determine encoding mode from raw output
 #PS#
 #PS#$header = @"
 #PS#$divider
-#PS#$(Center-Line "$artist - $album")
+#PS#$(Center-Line "$artist -$album")
 #PS#$divider
 #PS#"@
 #PS#
@@ -340,5 +316,5 @@ Determine encoding mode from raw output
 #PS#)
 #PS#
 #PS#Write-Host ""
-#PS#Write-Host "$(Get-Emoji 0x2705) $folderName.nfo created successfully!" -ForegroundColor Green
+#PS#Write-Host "$(Get-Emoji 0x2705)$folderName.nfo created successfully!" -ForegroundColor Green
 #PS#Write-Host "$(Get-Emoji 0x1F3B6) Enjoy the music!"
